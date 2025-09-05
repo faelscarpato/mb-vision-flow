@@ -1,0 +1,117 @@
+{
+  "name": "MB Qualidade - PLÁSTICOS MB",
+  "short_name": "MB Qualidade",
+  "description": "Sistema de controle de qualidade industrial com IA integrada",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["productivity", "business", "utilities"],
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/mb-icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/mb-icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/mb-icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/mb-icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/mb-icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/mb-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/mb-icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/mb-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nova Inspeção",
+      "short_name": "Inspeção",
+      "description": "Iniciar nova inspeção de qualidade",
+      "url": "/inspecoes/nova",
+      "icons": [
+        {
+          "src": "/shortcuts/inspecao-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Abrir RNC",
+      "short_name": "RNC",
+      "description": "Criar novo relatório de não conformidade",
+      "url": "/rnc/nova",
+      "icons": [
+        {
+          "src": "/shortcuts/rnc-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Chat da Equipe",
+      "short_name": "Chat",
+      "description": "Acessar chat da equipe",
+      "url": "/chat",
+      "icons": [
+        {
+          "src": "/shortcuts/chat-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Análise com IA",
+      "short_name": "IA",
+      "description": "Análise de peças com inteligência artificial",
+      "url": "/ia",
+      "icons": [
+        {
+          "src": "/shortcuts/ia-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "splash_pages": null
+}
