@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Filter, Plus, Calendar, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Link } from "react-router-dom";
+import { useInspecoes } from "@/hooks/useSupabase";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Inspecao {
   id: string;
@@ -103,19 +105,105 @@ export default function Inspecoes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterMaquina, setFilterMaquina] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  
+  const { data: inspecoes, isLoading, error } = useInspecoes();
 
-  const filteredInspecoes = mockInspecoes.filter((inspecao) => {
+  const filteredInspecoes = inspecoes?.filter((inspecao) => {
     const matchesSearch = 
       inspecao.maquina.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inspecao.molde.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inspecao.operador.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      inspecao.operador?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inspecao.inspetor.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesMaquina = !filterMaquina || inspecao.maquina === filterMaquina;
-    const matchesStatus = !filterStatus || inspecao.status === filterStatus;
+    const matchesMaquina = !filterMaquina || filterMaquina === "todas" || inspecao.maquina === filterMaquina;
+    const matchesStatus = !filterStatus || filterStatus === "todos" || getInspecaoStatus(inspecao) === filterStatus;
     
     return matchesSearch && matchesMaquina && matchesStatus;
-  });
+  }) || [];
+
+  // Função para determinar status da inspeção baseado nos itens
+  const getInspecaoStatus = (inspecao: any) => {
+    if (!inspecao.inspecao_itens || inspecao.inspecao_itens.length === 0) {
+      return "pendente";
+    }
+    
+    const totalItens = inspecao.inspecao_itens.length;
+    const itensPreenchidos = inspecao.inspecao_itens.filter((item: any) => item.status).length;
+    
+    if (itensPreenchidos === 0) return "pendente";
+    if (itensPreenchidos === totalItens) return "concluida";
+    return "em_andamento";
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "concluida":
+        return "bg-success text-success-foreground";
+      case "em_andamento":
+        return "bg-warning text-warning-foreground";
+      case "pendente":
+        return "bg-secondary text-secondary-foreground";
+      default:
+        return "bg-secondary text-secondary-foreground";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "concluida":
+        return "Concluída";
+      case "em_andamento":
+        return "Em Andamento";
+      case "pendente":
+        return "Pendente";
+      default:
+        return "Desconhecido";
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Inspeções</h1>
+            <p className="text-muted-foreground">Controle de qualidade em produção</p>
+          </div>
+          <Button disabled>
+            <Plus className="h-4 w-4" />
+            Nova Inspeção
+          </Button>
+        </div>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-32 w-full" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <h3 className="text-lg font-medium text-card-foreground mb-2">
+              Erro ao carregar inspeções
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              {error.message}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -152,7 +240,7 @@ export default function Inspecoes() {
                 <SelectValue placeholder="Máquina" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas</SelectItem>
+                <SelectItem value="todas">Todas</SelectItem>
                 <SelectItem value="MAQ-01">MAQ-01</SelectItem>
                 <SelectItem value="MAQ-03">MAQ-03</SelectItem>
                 <SelectItem value="MAQ-05">MAQ-05</SelectItem>
@@ -164,7 +252,7 @@ export default function Inspecoes() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="todos">Todos</SelectItem>
                 <SelectItem value="pendente">Pendente</SelectItem>
                 <SelectItem value="em_andamento">Em Andamento</SelectItem>
                 <SelectItem value="concluida">Concluída</SelectItem>
@@ -180,75 +268,82 @@ export default function Inspecoes() {
 
       {/* Inspeções List */}
       <div className="space-y-4">
-        {filteredInspecoes.map((inspecao) => (
-          <Card key={inspecao.id} className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="space-y-3">
-                {/* Header */}
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-card-foreground">
-                        {inspecao.maquina} - {inspecao.molde}
-                      </h3>
-                      <Badge className={getStatusColor(inspecao.status)}>
-                        {getStatusLabel(inspecao.status)}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {inspecao.data} às {inspecao.hora}
-                      </span>
-                      <span>Turno {inspecao.turno}</span>
-                    </div>
-                  </div>
-                  <ClipboardCheck className="h-5 w-5 text-muted-foreground" />
-                </div>
-
-                {/* Details */}
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Operador:</span>
-                    <p className="font-medium">{inspecao.operador}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Inspetor:</span>
-                    <p className="font-medium">{inspecao.inspetor}</p>
-                  </div>
-                </div>
-
-                {/* Progress */}
-                {inspecao.status !== "pendente" && (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Progresso:</span>
-                      <span className="font-medium">
-                        {inspecao.conformes + inspecao.naoConformes}/{inspecao.totalItens} itens
-                      </span>
-                    </div>
-                    <div className="w-full bg-secondary rounded-full h-2">
-                      <div 
-                        className="bg-primary h-2 rounded-full transition-all"
-                        style={{ 
-                          width: `${((inspecao.conformes + inspecao.naoConformes) / inspecao.totalItens) * 100}%` 
-                        }}
-                      />
-                    </div>
-                    {inspecao.naoConformes > 0 && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-muted-foreground">Não conformes:</span>
-                        <Badge variant="destructive" className="text-xs">
-                          {inspecao.naoConformes}
+        {filteredInspecoes.map((inspecao) => {
+          const status = getInspecaoStatus(inspecao);
+          const totalItens = inspecao.inspecao_itens?.length || 0;
+          const itensPreenchidos = inspecao.inspecao_itens?.filter((item: any) => item.status).length || 0;
+          const naoConformes = inspecao.inspecao_itens?.filter((item: any) => item.status === 'NC').length || 0;
+          
+          return (
+            <Card key={inspecao.id} className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  {/* Header */}
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-card-foreground">
+                          {inspecao.maquina} - {inspecao.molde}
+                        </h3>
+                        <Badge className={getStatusColor(status)}>
+                          {getStatusLabel(status)}
                         </Badge>
                       </div>
-                    )}
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {new Date(inspecao.data).toLocaleDateString('pt-BR')} às {inspecao.hora}
+                        </span>
+                        <span>Turno {inspecao.turno}</span>
+                      </div>
+                    </div>
+                    <ClipboardCheck className="h-5 w-5 text-muted-foreground" />
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+
+                  {/* Details */}
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Operador:</span>
+                      <p className="font-medium">{inspecao.operador || "N/A"}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Inspetor:</span>
+                      <p className="font-medium">{inspecao.inspetor}</p>
+                    </div>
+                  </div>
+
+                  {/* Progress */}
+                  {status !== "pendente" && totalItens > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Progresso:</span>
+                        <span className="font-medium">
+                          {itensPreenchidos}/{totalItens} itens
+                        </span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div 
+                          className="bg-primary h-2 rounded-full transition-all"
+                          style={{ 
+                            width: `${(itensPreenchidos / totalItens) * 100}%` 
+                          }}
+                        />
+                      </div>
+                      {naoConformes > 0 && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">Não conformes:</span>
+                          <Badge variant="destructive" className="text-xs">
+                            {naoConformes}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {filteredInspecoes.length === 0 && (

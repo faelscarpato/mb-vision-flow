@@ -10,14 +10,41 @@ import {
 import { KPICard } from "@/components/dashboard/KPICard";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
+import { useAuth } from "@/hooks/useAuth";
+import { useInspecoes, useRNCs, useOSFerramentaria } from "@/hooks/useSupabase";
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  const { data: inspecoes } = useInspecoes();
+  const { data: rncs } = useRNCs();
+  const { data: osFerramentaria } = useOSFerramentaria();
+
+  const getUserName = () => {
+    if (!user) return "Usuário";
+    const firstName = user.user_metadata?.first_name;
+    const lastName = user.user_metadata?.last_name;
+    if (firstName && lastName) {
+      return `${firstName} ${lastName}`;
+    }
+    return user.email?.split('@')[0] || "Usuário";
+  };
+
+  // Calcular KPIs reais
+  const inspecoesHoje = inspecoes?.filter(i => 
+    new Date(i.created_at).toDateString() === new Date().toDateString()
+  ).length || 0;
+
+  const rncAbertas = rncs?.filter(r => r.status === 'Aberta').length || 0;
+  const rncCriticas = rncs?.filter(r => r.severidade === 'Alta' && r.status === 'Aberta').length || 0;
+  
+  const osPendentes = osFerramentaria?.filter(os => os.status === 'Aberta').length || 0;
+  const osUrgentes = osFerramentaria?.filter(os => os.prioridade === 'Urgente' && os.status === 'Aberta').length || 0;
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Welcome Section */}
       <div className="space-y-2">
         <h2 className="text-2xl font-bold text-foreground">
-          Bem-vindo, João Silva
+          Bem-vindo, {getUserName()}
         </h2>
         <p className="text-muted-foreground">
           Acompanhe a qualidade em tempo real
@@ -28,7 +55,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="Inspeções Hoje"
-          value="24"
+          value={inspecoesHoje.toString()}
           description="Meta: 30"
           icon={ClipboardList}
           trend={{
@@ -41,8 +68,8 @@ export default function Dashboard() {
         
         <KPICard
           title="RNC Abertas"
-          value="5"
-          description="2 críticas"
+          value={rncAbertas.toString()}
+          description={`${rncCriticas} críticas`}
           icon={AlertTriangle}
           trend={{
             value: 12,
@@ -54,8 +81,8 @@ export default function Dashboard() {
         
         <KPICard
           title="OS Pendentes"
-          value="12"
-          description="3 urgentes"
+          value={osPendentes.toString()}
+          description={`${osUrgentes} urgentes`}
           icon={Wrench}
           trend={{
             value: 5,
