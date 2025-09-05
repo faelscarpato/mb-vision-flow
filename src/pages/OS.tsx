@@ -131,8 +131,8 @@ export default function OS() {
       os.responsavel.toLowerCase().includes(searchTerm.toLowerCase()) ||
       os.solicitante.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesPrioridade = !filterPrioridade || os.prioridade === filterPrioridade;
-    const matchesStatus = !filterStatus || os.status === filterStatus;
+    const matchesPrioridade = !filterPrioridade || filterPrioridade === "todas" || os.prioridade === filterPrioridade;
+    const matchesStatus = !filterStatus || filterStatus === "todos" || os.status === filterStatus;
     
     return matchesSearch && matchesPrioridade && matchesStatus;
   });
@@ -229,7 +229,7 @@ export default function OS() {
                 <SelectValue placeholder="Prioridade" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas</SelectItem>
+                <SelectItem value="todas">Todas</SelectItem>
                 <SelectItem value="urgente">Urgente</SelectItem>
                 <SelectItem value="alta">Alta</SelectItem>
                 <SelectItem value="media">Média</SelectItem>
@@ -242,7 +242,7 @@ export default function OS() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="todos">Todos</SelectItem>
                 <SelectItem value="aberta">Aberta</SelectItem>
                 <SelectItem value="em_andamento">Em Andamento</SelectItem>
                 <SelectItem value="concluida">Concluída</SelectItem>
